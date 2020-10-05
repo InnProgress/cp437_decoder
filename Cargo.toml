@@ -1,0 +1,7 @@
+[package]
+name = "encoding"
+version = "0.1.0"
+authors = ["InnProgress <arnoldautuch4@gmail.com>"]
+edition = "2018"
+
+[dependencies]
