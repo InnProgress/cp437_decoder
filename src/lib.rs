@@ -1,19 +1,31 @@
-use memoized_converter::MemoizedConverter;
-use std::{collections::HashMap, fs, io::prelude::*, process, str};
-
 pub mod converter;
-pub mod memoized_converter;
+pub mod memoizer;
+
+use memoizer::Memoizer;
+use std::{collections::HashMap, fs, io::prelude::*, process, str};
 
 pub type CodePage = HashMap<u8, u32>;
 
 pub fn load_codepage(file_name: &'static str) -> CodePage {
-    let rules_string = fs::read_to_string(file_name).unwrap();
+    let rules_string = fs::read_to_string(file_name);
+    let rules_string = match rules_string {
+        Ok(v) => v,
+        Err(_) => {
+            println!("Problem with reading codepage {} file", file_name);
+            process::exit(0);
+        }
+    };
     let mut codepage: CodePage = HashMap::new();
     for line in rules_string.lines() {
         let splitted_line: Vec<&str> = line.split(":").collect();
-        if let Ok(v) = splitted_line[0].parse() {
-            codepage.insert(v, u32::from_str_radix(splitted_line[1], 16).unwrap());
+        if splitted_line.len() != 2 {
+            continue;
         }
+        let decimal = splitted_line[0].parse();
+        let unicode = u32::from_str_radix(splitted_line[1], 16);
+        if decimal.is_ok() && unicode.is_ok() {
+            codepage.insert(decimal.unwrap(), unicode.unwrap());
+        };
     }
     codepage
 }
@@ -40,7 +52,7 @@ pub fn write_output(file_name: &'static str, output: Vec<u8>) {
 
 pub fn convert_bytes(input_bytes: Vec<u8>, codepage: CodePage) -> Vec<u8> {
     let mut output_bytes: Vec<u8> = vec![];
-    let mut converter = MemoizedConverter::new();
+    let mut converter = Memoizer::new(converter::convert_unicode_to_utf8_bytes);
     input_bytes.into_iter().for_each(|byte| {
         match codepage.get(&byte) {
             Some(v) => {
