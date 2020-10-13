@@ -54,12 +54,13 @@ pub fn convert_unicode_to_utf8_bytes(unicode: u32) -> Vec<u8> {
     let utf8_as_binary = utf8_as_binary.chars().rev().collect::<String>();
     let utf8 = u32::from_str_radix(&utf8_as_binary, 2).unwrap();
 
-    let mut bytes = vec![];
+    // let mut bytes = vec![];
+    // for i in 0..=number_of_bytes {
+    //     let byte: u8 = ((utf8 >> ((number_of_bytes - i) * 8)) & 0xff) as u8;
+    //     bytes.push(byte);
+    // }
 
-    for i in 1..=number_of_bytes + 1 {
-        let byte = (utf8 >> ((number_of_bytes + 1 - i) * 8)) & 0xff;
-        bytes.push(byte as u8);
-    }
+    let bytes = utf8.to_be_bytes()[ENCODINGS.len() - number_of_bytes - 1..].to_vec();
 
     bytes
 }
